@@ -2,28 +2,26 @@
 <html>
     <head>
         <title>{{title}}</title>
-        <style>
+        <style> 
             .error {
                 color: red;
                 font-style:italic
             }
-            #menu {
-                margin-left: 10px;
-                width: 200px;
-                position: fixed;
-                top: 0;
-                left: 0;
-                bottom: 0;
-
-            }
-            #main {
-                margin-left: auto;
-                margin-right: auto;
-                padding-left: 1em;
-                padding-right: 1em;
-                max-width: 700
-            }
-                </style>
-        </title>
+        </style>
+    
     </head>
+    <body>
+        <a href="/blog" style="margin-left: 10px">Main Blog Page</a>
+        <a href="/newpost" style="margin-left: 20">Add a Blog Entry</a>
+        
+            {% with messages = get_flashed_messages() %}
+                <ul>
+                    {% for message in messages %}
+                        <li>{{message}}</li>
+                    {% endfor %}
+                </ul>
+            {% endwith %}
+        {% block content %}
+        {% endblock %}
+    </body>
 </html>

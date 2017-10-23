@@ -1,11 +1,14 @@
-from flask import Flask, request, redirect, render_template
+from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
+
 app = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://build-a-blog:build-a-blog@localhost:3306/build-a-blog'
 app.config['SQLALCHEMY_ECHO'] = True
-
 db = SQLAlchemy(app)
+
+app.secret_key = 'secret_key'
+
 
 
 class Blog(db.Model):
@@ -20,44 +23,42 @@ class Blog(db.Model):
 
 @app.route('/')
 def index():
-    return render_template('blog.html')
+    return redirect('/blog')
 
-@app.route('/blog', methods=['GET'])
+@app.route('/blog')
 def blog():
+    id = request.args.get("id")
+    if not id:
+        posts = Blog.query.all()
+        return render_template('blog.html', title="Build a Blog", posts=posts)
+    post = Blog.query.filter_by(id=id).first()
+    return render_template('blog-entry.html', title="Blog", post=post)
 
-    blog_id = request.args.get('id')
-    blogs = Blogs.query.all()
 
-    if blog_id:
-        blog = Blog.query.get(blog_id)
-        return render_template('blog.html', blog=blog)
-
-    else:
-        return render_template("blog.html", blogs=blogs, title="Main Page")
-
-@app.route('/new-blog', methods=['GET', 'POST'])
-def new_post():
-    return render_template('new-blog.html', title="Build a Blog")
-
-@app.route('/new-post', methods=['POST', 'GET'])
-def new_blog():
+@app.route('/newpost', methods=['POST', 'GET'])
+def newpost():
+    if request.method == 'GET':
+        return render_template('newpost.html')
     if request.method == 'POST':
         title = request.form['title']
         body = request.form['body']
-
-        print(title,' ', body)
-
+        title_error = ''
+        body_error = ''
+    
         if not title or not body:
-            flash("Please fill out all the fields.")
-            return redirect('/new-post')
+            if not title:
+                flash("Please fill out all the fields.")
+            if not body:
+                flash("Please fill out all the fields.")
+            return render_template('/newpost.html', title=title, title_error=title_error, body=body, body_error=body_error)
 
         else:
-            blog = Blog(title, body)
-            db.session.add(blog)
+            new_blog_entry = Blog(title, body)
+            db.session.add(new_blog_entry)
             db.session.commit()
-            return redirect('/blog?id'== str(id))
-
-    return render_template('new-post.html')
+        
+        return redirect('/blog?id='+ str(new_blog_entry.id))
+   
 
 if __name__ == '__main__':
     app.run()
